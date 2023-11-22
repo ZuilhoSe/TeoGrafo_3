@@ -6,33 +6,29 @@ from math import ceil
 
 class Edge:
     def __init__(self, v1, v2, capacity, flow, reverse):
-
         self.v1 = int(v1)
         self.v2 = int(v2)
-
         self.capacity = int(capacity)
         self.flow = int(flow)
-
         self.reverse = reverse
         self.residual_capacity = 0
-        
         self.original_pointer = None
-        self.reversa_pointer = None
+        self.reverse_pointer = None
         
         if reverse:
             self.residual_capacity = self.flow
         else:
             self.residual_capacity = self.capacity - self.flow
 
-    def update(self, bottleneck:int):
+    def update(self, bottleneck):
         self.flow += bottleneck
         if self.reverse == True:
             self.residual_capacity = self.flow
         else:
             self.residual_capacity = self.capacity - self.flow
-            self.reversa_pointer.update(bottleneck)
+            self.reverse_pointer.update(bottleneck)
     
-    def elegible(self, delta: int) -> bool:
+    def elegible(self, delta):
         if self.residual_capacity >= delta:
             return True
         else:
@@ -41,28 +37,25 @@ class Edge:
 class Graph:
     def __init__(self, data, directed = True):
         self.data = data
-
         self.graph = defaultdict(list) 
+        self.load_data(directed)
+        
+    def load_data(self, directed):
         f = open(self.data, 'r')
         self.size = int(f.readline())
         if directed == True:
             for line in f:  
                 split = line.split()
-                v1 = int(split[0])
-                v2 = int(split[1])
-                capacity = int(split[2])
+                v1, v2, capacity = int(split[0]), int(split[1]), int(split[2])
                 original = self.add_edge(v1, v2, capacity, 0, False)
                 reverse = self.add_edge(v2, v1, capacity, 0, True)
-                
-                original.reversa_pointer = reverse
+                original.reverse_pointer = reverse
                 reverse.original_pointer = original
                 
         if directed == False:
             for line in f:   
                 split = line.split()
-                v1 = int(split[0])
-                v2 = int(split[1])
-                capacity = int(split[2])
+                v1, v2, capacity = int(split[0]), int(split[1]), int(split[2])
                 self.add_edge(v1, v2, capacity, 0, False)
                 self.add_edge(v2, v1, capacity, 0, True)
                 self.add_edge(v1, v2, capacity, 0, True)
@@ -73,14 +66,14 @@ class Graph:
         self.graph[v1].append(Edge(v1, v2, capacity, flow, reverse))
         return self.graph[v1][-1]
 
-    def get_neighboors(self, v: int):
+    def get_neighboors(self, v):
         neighboors = self.graph[v]
         return neighboors
 
     def bfs(self, start, end, delta):
         setup = 1
-        explored = [0] * (self.size + 1) #O Zero não será utilizado
-        fathers = [0] * (self.size + 1) #O Zero não será utilizado
+        explored = [0] * (self.size + 1) 
+        fathers = [0] * (self.size + 1)
         explored[start] = 1
         fathers[start] = None
 
@@ -164,7 +157,7 @@ class Graph:
             flow += edge.flow
         return flow
 
-    def get_capacity(self, v: int) -> int:
+    def get_capacity(self, v):
         capacity = 0
         neighboors = self.get_neighboors(v)
         for edge in neighboors:
@@ -176,18 +169,16 @@ class Graph:
         f = open(self.data, 'r')
         self.size = int(f.readline())
 
-        for line in f:   #Criando graph residual
+        for line in f:
             split = line.split()
-            v1 = int(split[0])
-            v2 = int(split[1])
-            capacity = int(split[2])
+            v1, v2, capacity = int(split[0]), int(split[1]), int(split[2])
             self.add_edge(v1, v2, capacity, 0, False)
             self.add_edge(v2, v1, capacity, 0, True)
         f.close
 
-    def flow_alocation(self, write_path: str) -> int:
+    def flow_alocation(self, write_path):
         f = open(write_path, 'w')
-        f.writelines('edge,v1,v2,flow\n')
+        f.writelines('edge|v1|v2|flow\n')
         graph = self.graph
         count=0
         start = time.time()
@@ -195,8 +186,8 @@ class Graph:
             for edge in graph[v]:
                 if edge.reverse == False:
                     count += 1
-                    f.writelines(f'{count},{edge.v1},{edge.v2},{edge.flow} \n')
+                    f.writelines(f'{count}|{edge.v1}|{edge.v2}|{edge.flow} \n')
         end = time.time()
-        tempo=(end - start)
+        time = end - start
         f.close()
-        return tempo
+        return time
